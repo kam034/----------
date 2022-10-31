@@ -6,7 +6,6 @@ const app = {
 }
 
 
-
 //получение и отрисовка списка задач
 async function getListTasks() {
   try {
@@ -115,10 +114,7 @@ function rendering(newTaskJson) {
   const el = document.createElement("li"); 
   el.appendChild(icon);
   el.appendChild(x);
-  //el.className = 'todo-item';
   el.appendChild(text);
-  
-  
 
   const list = document.getElementById('todo-list');
   list.prepend(el);
