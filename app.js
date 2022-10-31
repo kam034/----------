@@ -1,13 +1,28 @@
 //import {random} from './lodash';
 
-let NUMBER = 13; //число отрисовываемых задач 
+const app = {
+  NUMBER: 13, //число отрисовываемых задач
+  count: 200, //счетчик для собственный задач  
+}
+
 
 
 //получение и отрисовка списка задач
-// async function getListTasks() {
-//   let result = await fetch('https://jsonplaceholder.typicode.com/todos');
+async function getListTasks() {
+  try {
+    let request = await fetch('https://jsonplaceholder.typicode.com/todos');
+    let result = await request.json();
+    for (let p=0; p < app.NUMBER; p++) {
+      result[p].user = 'Ervin Howell';
+      console.log(result[p]);
+      rendering(result[p]);
+    }
+  }
+  catch (error) {
+    alert('List of tasks don`t loaded!');
+  }
+}
 
-// }
 
 //запрос списка юзеров и отрисовка их на страницу
 function showListUser() {     
@@ -36,7 +51,7 @@ function makeRequest() {
         method: 'POST',
         body: JSON.stringify({
           userId: 1,
-          id: _.random(200,1000),
+          id: app.count,
           title: input.value,
           complited: false,
           user: select.value
@@ -49,6 +64,7 @@ function makeRequest() {
         return result.json();
       })
       .then(function (newTaskJson) {
+        console.log('ID', newTaskJson.id)
         input.value = '';
         select.value = 'select user';
         rendering(newTaskJson);            //отрисовываем страницу, если пришел ответ с сервера
@@ -60,7 +76,6 @@ function makeRequest() {
   }
 }
 
-
 //отрисовка страницы после добавления новой задачи
 function rendering(newTaskJson) {    
   const icon = document.createElement("i");
@@ -71,6 +86,7 @@ function rendering(newTaskJson) {
   icon.style.color = 'blue';
   icon.onclick = async function () {    //обработчик на клик - запрос на изменение статуса
     let request = await checkBox(newTaskJson);
+    console.log(request)
     if (request.completed===true) {
       icon.innerText = 'check_box'; 
       icon.style.color = 'blue';
@@ -91,14 +107,22 @@ function rendering(newTaskJson) {
     } else if (request === 0) console.log('ERROR! Task don`t deleted!');
   }
 
-  const el = document.createElement("li");
-  el.innerText = newTaskJson.title + ' by ' + newTaskJson.user;
-  //el.className = 'todo-item';
-  el.appendChild(x);
+  const text = document.createElement("p");
+  text.innerText = newTaskJson.title + ' by ' + newTaskJson.user;
+  text.style.marginLeft = '34px';
+  text.style.maxWidth = '430px'
+
+  const el = document.createElement("li"); 
   el.appendChild(icon);
+  el.appendChild(x);
+  //el.className = 'todo-item';
+  el.appendChild(text);
+  
+  
 
   const list = document.getElementById('todo-list');
-  list.appendChild(el);
+  list.prepend(el);
+  app.count++;
 }
 
 //запрос на изменение статуса задачи
@@ -117,6 +141,7 @@ async function checkBox(TaskJson) {
   });
 
   let result = await response.json();
+  console.log(response);
   if (result.completed === true) {
     return result;
   } 
@@ -143,4 +168,5 @@ function isEmpty(obj) {
 }
 
 showListUser();
+getListTasks();
 makeRequest();
