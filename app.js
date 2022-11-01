@@ -78,18 +78,17 @@ function makeRequest() {
 //отрисовка страницы после добавления новой задачи
 function rendering(newTaskJson) {    
   const icon = document.createElement("i");
-  icon.innerText = 'check_box_outline_blank';
+  if (newTaskJson.completed) {
+    icon.innerText = 'check_box';
+  } else icon.innerText = 'check_box_outline_blank';
   icon.className = 'material-icons';
   icon.style.float = 'left';
   icon.style.marginRight = '10px';
   icon.style.color = 'blue';
   icon.onclick = async function () {    //обработчик на клик - запрос на изменение статуса
     let request = await checkBox(newTaskJson);
-    console.log(request)
-    if (request.completed===true) {
-      icon.innerText = 'check_box'; 
-      icon.style.color = 'blue';
-    } else console.log('ERROR! Status don`t changed!');
+    console.log(request);
+    (request.completed===true) ? icon.innerText = 'check_box' : icon.innerText = 'check_box_outline_blank'; 
   } 
 
   const x = document.createElement("div")
@@ -99,11 +98,12 @@ function rendering(newTaskJson) {
   x.style.color = 'red'; 
   x.onclick = async function () {   //запрос на удаление, если успешно - удаление, если нет - вывод ошибки
     let request = await deleteTask(newTaskJson);
-    if (isEmpty(request)) {      
+    if (request === 0) return;
+    else {      
       el.removeChild(icon);
       el.removeChild(x);
       list.removeChild(el);
-    } else if (request === 0) console.log('ERROR! Task don`t deleted!');
+    }  
   }
 
   const text = document.createElement("p");
@@ -123,37 +123,52 @@ function rendering(newTaskJson) {
 
 //запрос на изменение статуса задачи
 async function checkBox(TaskJson) {
-  let response = await fetch('https://jsonplaceholder.typicode.com/todos/'+TaskJson.id, {
-  method: 'PATCH',
-  body: JSON.stringify({
-    userId: TaskJson.userId,
-    id: TaskJson.id,
-    title: TaskJson.title,
-    completed: true,
-  }),
-  headers: {
-    'Content-type': 'application/json; charset=UTF-8',
-  },
-  });
+  let status;
+  (TaskJson.completed === true) ? status = false : status = true;
 
-  let result = await response.json();
-  console.log(response);
-  if (result.completed === true) {
-    return result;
-  } 
+  try {
+    let response = await fetch('https://jsonplaceholder.typicode.com/todos/'+TaskJson.id, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      userId: TaskJson.userId,
+      id: TaskJson.id,
+      title: TaskJson.title,
+      completed: status,
+    }),
+    headers: {
+      'Content-type': 'application/json; charset=UTF-8',
+    },
+    });
+
+    let result = await response.json();
+    console.log(response);
+    if (result.completed === status) {
+      return result;
+    } 
+  }
+  catch {
+    alert('Task don`t changed status!');
+  }
 }
 
 //запрос на удаление задачи
 async function deleteTask(TaskJson) {
-  let response = await fetch('https://jsonplaceholder.typicode.com/todos/'+TaskJson.id, {
-    method: 'DELETE',
-  });
+  try {
+    let response = await fetch('https://jsonplaceholder.typicode.com/todos/'+TaskJson.id, {
+      method: 'DELETE',
+    });
 
-  let result = await response.json();
-  if (isEmpty(result)) {
-    return result;
-  } else return 0;
+    let result = await response.json();
+    if (isEmpty(result)) {
+      return result;
+    } else return 0;
+  }
+  catch {
+    alert('Task don`t deleted!');
+    return 0;
+  }
 }
+
 
 //проверка на пустоту объекта
 function isEmpty(obj) {
